@@ -27,6 +27,8 @@
         "math.h": "c",
         "esp_system.h": "c",
         "esp_websocket_client.h": "c",
-        "wifi_2_services.h": "c"
+        "wifi_2_services.h": "c",
+        "ws_send.h": "c",
+        "my_send_mqtt.h": "c"
     }
 }

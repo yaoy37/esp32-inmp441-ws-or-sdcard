@@ -1,0 +1,6 @@
+source "E:/esp-idf/container/v4.4.7/esp-idf/components/app_update/Kconfig.projbuild"
+source "E:/esp-idf/container/v4.4.7/esp-idf/components/bootloader/Kconfig.projbuild"
+source "E:/esp-idf/container/v4.4.7/esp-idf/components/esp_rom/Kconfig.projbuild"
+source "E:/esp-idf/container/v4.4.7/esp-idf/components/esptool_py/Kconfig.projbuild"
+source "E:/esp-idf/container/v4.4.7/esp-idf/components/partition_table/Kconfig.projbuild"
+source "E:/Workspace/test/esp32-inmp441-ws-or-sdcard/main/Kconfig.projbuild"
