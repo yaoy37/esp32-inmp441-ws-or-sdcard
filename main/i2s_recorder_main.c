@@ -20,10 +20,9 @@
 #include "driver/i2s.h"
 #include "driver/gpio.h"
 #include "driver/spi_common.h"
-// #include "sdmmc_cmd.h"
 #include "sdkconfig.h"
 #include "nvs_flash.h"
-#include "wifi_2_services.h"
+#include "wifi_server/wifi_2_services.h"
 #include "web_socket/ws_send.h"
 #include "mqtt_server/my_send_mqtt.h"
 
@@ -81,6 +80,7 @@ void check_memory_usage()
     // heap_caps_print_heap_info(MALLOC_CAP_DEFAULT);
 }
 
+// int smartconfig_over1;
 void read_sound_task(void)
 {
     while (1)
@@ -93,8 +93,8 @@ void read_sound_task(void)
         i2s_read(CONFIG_EXAMPLE_I2S_CH, (char *)i2s_buff, sizeof(i2s_buff), &bytes_read, 5000);
         if (bytes_read > 0)
         {
-            send_ws((char *)i2s_buff, bytes_read);
-            send_mqtt((char *)i2s_buff, bytes_read);
+            send_ws_bin((char *)i2s_buff, bytes_read);
+            // send_mqtt((char *)i2s_buff, bytes_read);
         }
     }
 }
@@ -106,7 +106,7 @@ void app_main(void)
     // init flash
     ESP_ERROR_CHECK(nvs_flash_init());
     initialise_wifi();
-    vTaskDelay(5000 / portTICK_RATE_MS);
+    vTaskDelay(5000);
     // 创建 read_sound 任务
     // xTaskCreate(&read_sound_task, "read_sound_task", 1024*4, NULL, 5, NULL);
     read_sound_task();

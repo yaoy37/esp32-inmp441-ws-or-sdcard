@@ -1,9 +1,13 @@
 #include <stdio.h>
+#include <stdint.h>
+#include <stddef.h>
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
-#include "my_mqtt_client.h"
+#include "my_send_mqtt.h"
+// #include "protocol_examples_common.h"
+#include "mqtt_client.h"
 
 #define TOPIC "voice"
 #define TAG "send_mqtt"
@@ -43,7 +47,7 @@ static void mqtt_event_handler(esp_mqtt_event_handle_t event)
 esp_mqtt_client_handle_t init_mqtt()
 {
     esp_mqtt_client_config_t mqtt_cfg = {
-        .uri = BROKER_URI,
+        .broker.address.uri = BROKER_URI,
     };
 
     esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
