@@ -7,7 +7,7 @@
 // 如果没有esp_websocket_client 库可以在项目目录里执行 下面命令指定依赖，或者到官网（git）下载最新的代码
 // idf.py add-dependency "espressif/esp_websocket_client=*"
 
-#define WEBSOCKET_URI "ws://192.168.10.172:8989/ws_binary"  // WebSocket 服务器地址
+#define WEBSOCKET_URI "ws://192.168.10.171:8989/ws_binary"  // WebSocket 服务器地址
 
 static const char *TAG = "WEBSOCKET_CLIENT";
 
@@ -24,10 +24,10 @@ void websocket_event_handler(void *handler_args, esp_event_base_t base, int32_t 
             ESP_LOGI(TAG, "WebSocket disconnected");
             break;
         case WEBSOCKET_EVENT_DATA:
-            ESP_LOGI(TAG, "Received data");
-            printf("Received opcode=%d\n", data->op_code);
+            // ESP_LOGI(TAG, "Received data");
+            // printf("Received opcode=%d\n", data->op_code);
             if (data->op_code == 0x1) {
-                printf("Received text data: %.*s\n", data->data_len, (char *)data->data_ptr);
+                // printf("Received text data: %.*s\n", data->data_len, (char *)data->data_ptr);
             }
             break;
         case WEBSOCKET_EVENT_ERROR:
@@ -39,7 +39,7 @@ void websocket_event_handler(void *handler_args, esp_event_base_t base, int32_t 
 void websocket_app_start(void) {
     // 配置 WebSocket 客户端
     esp_websocket_client_config_t websocket_cfg = {
-        .uri = "ws://192.168.10.172:8989/ws_binary",
+        .uri = WEBSOCKET_URI,
         .headers = "X-Client-ID: client-id-12345\r\n",
     };
 
@@ -65,7 +65,8 @@ void send_ws_bin(char*data,int64_t data_size){
         esp_websocket_client_destroy(client);
         client = NULL;
         ESP_LOGI(TAG, "reset websocket_app");
+        websocket_app_start();
     };
-    test_socket();
-    // esp_websocket_client_send_bin(client, data, data_size, 5000);
+    // test_socket();
+    esp_websocket_client_send_bin(client, data, data_size, 5000);
 }
