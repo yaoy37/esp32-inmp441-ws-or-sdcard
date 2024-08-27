@@ -63,8 +63,8 @@ void send_mqtt(char *data, int data_size)
         return;
     }
 
-    int msg_id = esp_mqtt_client_publish(client, TOPIC, data, 0, 1, 0);
-    ESP_LOGI(TAG, "Message published with msg_id=%d", msg_id);
+    int msg_id = esp_mqtt_client_publish(client, TOPIC, data, data_size, 1, 0);
+    ESP_LOGI(TAG, "Message published with msg_id=%d, size=%d", msg_id, data_size);
 }
 
 // void app_main(void)
