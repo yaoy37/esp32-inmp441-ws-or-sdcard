@@ -13,54 +13,73 @@
 #define TAG "send_mqtt"
 #define BROKER_URI "mqtt://119.91.201.153:1883" // 替换为你的 MQTT Broker URI
 
-esp_mqtt_client_handle_t mqtt_client = NULL;
-static void mqtt_event_handler(esp_mqtt_event_handle_t event)
-{
-    static int32_t last_id = 0;
-    int msg_id;
+esp_mqtt_client_handle_t client = NULL;
 
-    switch (event->event_id)
-    {
-    case MQTT_EVENT_CONNECTED:
-        ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-        msg_id = esp_mqtt_client_subscribe(event->client, TOPIC, 0);
-        ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
-        break;
-    case MQTT_EVENT_DISCONNECTED:
-        ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
-        break;
-    case MQTT_EVENT_DATA:
-        if (!strcmp(event->topic, TOPIC))
-        {
-            ESP_LOGI(TAG, "Received message: %.*s", event->data_len, event->data);
-        }
-        break;
-    case MQTT_EVENT_ERROR:
-        ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
-        break;
-    default:
-        ESP_LOGI(TAG, "Other event id:%d", event->event_id);
-        break;
+static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
+{
+    esp_mqtt_event_handle_t event = event_data;
+    esp_mqtt_client_handle_t client = event->client;
+
+    switch (event->event_id) {
+        case MQTT_EVENT_CONNECTED:
+            ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
+            break;
+
+        case MQTT_EVENT_DISCONNECTED:
+            ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
+            break;
+
+        case MQTT_EVENT_PUBLISHED:
+            ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
+            break;
+
+        case MQTT_EVENT_ERROR:
+            ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
+            break;
+
+        default:
+            ESP_LOGI(TAG, "Other event id:%d", event->event_id);
+            break;
     }
 }
 
-esp_mqtt_client_handle_t init_mqtt()
+void init_mqtt()
 {
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker.address.uri = BROKER_URI,
     };
 
-    esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
+    client = esp_mqtt_client_init(&mqtt_cfg);
     esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
     esp_mqtt_client_start(client);
-    return client;
 }
+// void send_mqtt(const char *message)
 
 void send_mqtt(char *data, int data_size)
 {
-    if (mqtt_client == NULL)
-    {
-        mqtt_client = init_mqtt();
+    if (client == NULL) {
+        ESP_LOGE(TAG, "MQTT client is not initialized");
+        init_mqtt();
+        return;
     }
-    esp_mqtt_client_publish(mqtt_client, TOPIC, data, data_size, 1, 0);
+
+    int msg_id = esp_mqtt_client_publish(client, TOPIC, data, 0, 1, 0);
+    ESP_LOGI(TAG, "Message published with msg_id=%d", msg_id);
 }
+
+// void app_main(void)
+// {
+//     // Initialize MQTT client
+//     init_mqtt();
+
+//     // Wait for the client to connect
+//     vTaskDelay(3000 / portTICK_PERIOD_MS);
+
+//     // Send a message to the broker
+//     send_message("Hello, MQTT!");
+
+//     // Optionally, keep the task running to handle any events
+//     while (true) {
+//         vTaskDelay(1000 / portTICK_PERIOD_MS);
+//     }
+// }

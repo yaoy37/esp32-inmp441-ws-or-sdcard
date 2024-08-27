@@ -93,8 +93,8 @@ void read_sound_task(void)
         i2s_read(CONFIG_EXAMPLE_I2S_CH, (char *)i2s_buff, sizeof(i2s_buff), &bytes_read, 5000);
         if (bytes_read > 0)
         {
-            send_ws_bin((char *)i2s_buff, bytes_read);
-            // send_mqtt((char *)i2s_buff, bytes_read);
+            // send_ws_bin((char *)i2s_buff, sizeof(i2s_buff));
+            send_mqtt((char *)i2s_buff, sizeof(i2s_buff));
         }
     }
 }
