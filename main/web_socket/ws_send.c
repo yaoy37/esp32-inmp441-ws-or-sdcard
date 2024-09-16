@@ -7,7 +7,7 @@
 // 如果没有esp_websocket_client 库可以在项目目录里执行 下面命令指定依赖，或者到官网（git）下载最新的代码
 // idf.py add-dependency "espressif/esp_websocket_client=*"
 
-#define WEBSOCKET_URI "ws://192.168.10.171:8989/ws_binary"  // WebSocket 服务器地址
+#define WEBSOCKET_URI "ws://127.0.0.1:8009/ws_binary"  // WebSocket 服务器地址
 
 static const char *TAG = "WEBSOCKET_CLIENT";
 

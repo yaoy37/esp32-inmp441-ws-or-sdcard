@@ -23,7 +23,8 @@
 #include "esp_mac.h"
 #include "wifi_2_services.h"
 
-
+#define wifi_address "CMCC-CCEh"
+#define wifi_password "xpft2675"
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t s_wifi_event_group;
 int8_t smartconfig_over = 0;
@@ -37,6 +38,7 @@ static const char *TAG = "wifi_2_s";
 
 // esp_websocket_client_handle_t websocket_client = NULL;
 static void smartconfig_example_task(void * parm);
+static void connect_wifi_by_localtion(void * parm);
 
 static void event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data)
@@ -70,22 +72,24 @@ static void event_handler(void* arg, esp_event_base_t event_base,
 // 在 event_handler 中，当 event_base 为 IP_EVENT 且 event_id 为 IP_EVENT_STA_GOT_IP 时，标记连接成功，设备可以开始与服务器通信。
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         if(if_got_ssid) return;
-        xTaskCreate(smartconfig_example_task, "smartconfig_example_task", 4096, NULL, 3, NULL);
+        // 下面两个方法，第一个为 smartconfig 使用手机动态连接wifi ,后一个为在代码中写死wifi  选择其中一个使用
+        // xTaskCreate(smartconfig_example_task, "smartconfig_example_task", 4096, NULL, 3, NULL);
+        xTaskCreate(connect_wifi_by_localtion, "connect_wifi_by_localtion", 4096, NULL, 3, NULL);
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        if(if_got_ssid) return;
+        ESP_LOGI(TAG, "WIFI_EVENT_STA_DISCONNECTED");
         esp_wifi_connect();
         xEventGroupClearBits(s_wifi_event_group, CONNECTED_BIT);
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+        ESP_LOGI(TAG, "IP_EVENT_STA_GOT_IP");
         if(if_got_ssid) return;
         xEventGroupSetBits(s_wifi_event_group, CONNECTED_BIT);
-        // websocket_client = websocket_client_init(); // wifi 连接成功后，启动 websocket 服务
-        // esp_smartconfig_stop();
     } else if (event_base == SC_EVENT && event_id == SC_EVENT_SCAN_DONE) {
-        if(if_got_ssid) return;
         ESP_LOGI(TAG, "Scan done");
-    } else if (event_base == SC_EVENT && event_id == SC_EVENT_FOUND_CHANNEL) {
         if(if_got_ssid) return;
+    } else if (event_base == SC_EVENT && event_id == SC_EVENT_FOUND_CHANNEL) {
         ESP_LOGI(TAG, "Found channel");
+        if(if_got_ssid) return;
+        
     } else if (event_base == SC_EVENT && event_id == SC_EVENT_GOT_SSID_PSWD) {
         ESP_LOGI(TAG, "Got SSID and password");
         if(if_got_ssid) return;
@@ -126,6 +130,28 @@ static void event_handler(void* arg, esp_event_base_t event_base,
     }
 }
 
+static void connect_wifi_by_localtion(void * parm)
+{
+    wifi_config_t wifi_config = {
+    .sta = {
+        .ssid = wifi_address,
+        .password = wifi_password,
+        .threshold.authmode = WIFI_AUTH_WPA2_PSK,  // WiFi认证模式
+    },
+    };
+    ESP_LOGI(TAG, "Connecting to SSID: %s", wifi_address);
+    // 配置WiFi连接
+    // ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));  // 设置WiFi工作模式为STA（station）
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));  // 配置WiFi连接
+    ESP_ERROR_CHECK(esp_wifi_start());  // 启动WiFi
+    ESP_ERROR_CHECK(esp_wifi_connect());  // 连接到指定的WiFi
+    if_got_ssid = 1;
+    smartconfig_over = 1;
+
+    vTaskDelete(NULL);
+
+}
+
 void initialise_wifi(void)
 {
     ESP_ERROR_CHECK(esp_netif_init());
@@ -144,17 +170,6 @@ void initialise_wifi(void)
 
     ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
     ESP_ERROR_CHECK( esp_wifi_start() );
-
-
-    // // 等待 WiFi 连接成功
-    // EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group, CONNECTED_BIT, pdFALSE, pdTRUE, portMAX_DELAY);
-    // if (bits & CONNECTED_BIT) {
-    //     esp_smartconfig_stop();
-    //     ESP_LOGI(TAG, "WiFi connected successfully");
-    // } else {
-    //     ESP_LOGE(TAG, "Failed to connect to WiFi");
-    //     return;
-    // }
 
 }
 
